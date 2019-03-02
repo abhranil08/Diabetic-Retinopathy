@@ -19,7 +19,11 @@ from PIL import Image
 def preProcess(path):
     ##STANDARDIZE
     img=cv2.imread(path)
-    grayscale = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    ##CROPPING IMAGE
+    image=crop_image_to_aspect(img)
+    
+    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     downsample = skimage.measure.block_reduce(grayscale, (2,2), np.max)
     standardize = (downsample - downsample.mean()) / np.sqrt(downsample.var() + 1e-5)
     
@@ -29,6 +33,9 @@ def preProcess(path):
     
     ##GAMMA CORRECTION
     adjusted=adjust_gamma(cl1,gamma=1.2)
+    
+    
+    #adjusted1=crop_image_to_aspect(adjusted)
     cv2.imwrite(path,adjusted)
 
 def adjust_gamma(image, gamma=1.2):
@@ -42,7 +49,28 @@ def adjust_gamma(image, gamma=1.2):
 	return cv2.LUT(image, table)
 
 
-preProcess("14212_right.jpeg")
+def crop_image_to_aspect(image, tar=1.2):
+    # load image
+    image_bw = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    # compute aspect ratio
+    h, w = image_bw.shape[0], image_bw.shape[1]
+    sar = h / w if h > w else w / h
+    if sar < tar:
+        return image
+    else:
+        k = 0.5 * (1.0 - (tar / sar))
+        if h > w:
+            lb = int(k * h)
+            ub = h - lb
+            cropped = image[lb:ub, :, :]
+        else:
+            lb = int(k * w)
+            ub = w - lb
+            cropped = image[:, lb:ub, :]
+        return cropped
+
+
+preProcess("13064_right.jpeg")
 
 """print(Image.fromarray(grayscale))
 cv2.namedWindow('image', cv2.WINDOW_NORMAL)
