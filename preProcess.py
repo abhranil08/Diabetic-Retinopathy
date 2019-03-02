@@ -17,12 +17,14 @@ from PIL import Image
 #im=Image.fromarray
 
 def preProcess(path):
-    ##STANDARDIZE
+   
     img=cv2.imread(path)
     
     ##CROPPING IMAGE
     image=crop_image_to_aspect(img)
     
+	
+    ##STANDARDIZE
     grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     downsample = skimage.measure.block_reduce(grayscale, (2,2), np.max)
     standardize = (downsample - downsample.mean()) / np.sqrt(downsample.var() + 1e-5)
